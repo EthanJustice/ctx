@@ -1,4 +1,5 @@
 // std
+use std::path::PathBuf;
 
 // external
 use clap::{App, Arg, SubCommand};
@@ -7,22 +8,45 @@ use clap::{App, Arg, SubCommand};
 use ctx::Config;
 
 fn main() {
-    let config = Config::get();
+    let mut config = Config::get();
     let app = App::new("ctx")
-        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .about(env!("CARGO_PKG_DESCRIPTION")) // these are set at compile-time
         .author(env!("CARGO_PKG_AUTHORS"))
-        .subcommand(SubCommand::with_name("new").about("Create a new workspace."))
+        .subcommand(
+            SubCommand::with_name("new")
+                .about("Create a new workspace.")
+                .arg(
+                    Arg::with_name("INPUT")
+                        .help("The directory to set as the new workspace")
+                        .default_value("."),
+                )
+                .arg(
+                    Arg::with_name("name")
+                        .short("n")
+                        .takes_value(true)
+                        .help("The name to give the new workspace.")
+                        .required(false),
+                ),
+        )
         .subcommand(SubCommand::with_name("config").about("View and edit your config."))
         .subcommand(SubCommand::with_name("add").about("Add an item to the current workspace"))
         .subcommand(
             SubCommand::with_name("edit")
                 .about("Change or remove items in the current workspace")
-                .arg(Arg::with_name("d").help("Remove the specified item")),
+                .arg(Arg::with_name("d").help("Delete the specified item")),
         )
         .get_matches();
 
-    if let Some(_subcommand) = app.subcommand_matches("new") {
-        // ...
+    if let Some(subcommand) = app.subcommand_matches("new") {
+        let workspace_dir_name = subcommand
+            .value_of("INPUT")
+            .expect("No directory provided, aborting...");
+        let workspace_name = subcommand
+            .value_of("name")
+            .unwrap_or_else(|| workspace_dir_name);
+        config
+            .add_workspace(workspace_name, PathBuf::from(workspace_dir_name))
+            .expect("Failed to save new config.");
     } else if let Some(_subcommand) = app.subcommand_matches("config") {
     } else if let Some(_subcommand) = app.subcommand_matches("add") {
     } else if let Some(_subcommand) = app.subcommand_matches("edit") {

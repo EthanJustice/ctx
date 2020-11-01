@@ -11,11 +11,15 @@ license = "MIT"
 publish = false
 
 [dependencies]
+# argument parsing
 clap = "~2.33.3"
 
+# serialisation
 serde = { version = "~1.0.116", features = ["derive"]}
 serde_json = "~1.0.59"
 
 # fs
-
 directories = "~3.0.1"
+
+# other
+open = "~1.4.0" # open files using the default program

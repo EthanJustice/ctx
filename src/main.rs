@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 // external
 use clap::{App, Arg, SubCommand};
+use open::that;
 
 // local
 use ctx::Config;
@@ -35,6 +36,17 @@ fn main() {
                 .about("Change or remove items in the current workspace")
                 .arg(Arg::with_name("d").help("Delete the specified item")),
         )
+        .subcommand(
+            SubCommand::with_name("launch")
+                .about("Launch a workspace.")
+                .arg(
+                    Arg::with_name("name")
+                        .short("n")
+                        .help("The name of the workspace to launch")
+                        .required(true)
+                        .takes_value(true),
+                ),
+        )
         .get_matches();
 
     if let Some(subcommand) = app.subcommand_matches("new") {
@@ -45,10 +57,27 @@ fn main() {
             .value_of("name")
             .unwrap_or_else(|| workspace_dir_name);
         config
-            .add_workspace(workspace_name, PathBuf::from(workspace_dir_name))
+            .add_workspace(
+                workspace_name,
+                PathBuf::from(workspace_dir_name)
+                    .canonicalize()
+                    .expect("Failed to convert provided path to an absolute one."),
+            )
             .expect("Failed to save new config.");
     } else if let Some(_subcommand) = app.subcommand_matches("config") {
     } else if let Some(_subcommand) = app.subcommand_matches("add") {
     } else if let Some(_subcommand) = app.subcommand_matches("edit") {
+    } else if let Some(subcommand) = app.subcommand_matches("launch") {
+        let workspace = config
+            .workspaces
+            .get(
+                subcommand
+                    .value_of("name")
+                    .expect("No workspace name provided, aborting..."),
+            )
+            .expect("Couldn't find a workspace with that name.");
+        workspace.links.iter().for_each(|i| {
+            that(i).expect("Failed to open link.");
+        });
     }
 }

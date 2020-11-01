@@ -20,11 +20,13 @@ fn scaffold() -> std::io::Result<()> {
     )?)
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Debug, Clone, Deserialize)]
 /// ctx's configuration, as read from the user's configuration file located in their configuration directory
 pub struct Config {
     /// a list of all workspaces and the file system paths to them
-    pub workspaces: HashMap<String, PathBuf>,
+    pub workspace_paths: HashMap<String, PathBuf>,
+    /// a list of workspaces and their corresponding items (Workspace struct)
+    pub workspaces: HashMap<String, Workspace>,
 }
 
 impl Config {
@@ -50,7 +52,7 @@ impl Config {
         workspace: T,
         path: PathBuf,
     ) -> std::io::Result<()> {
-        self.workspaces.insert(workspace.into(), path);
+        self.workspace_paths.insert(workspace.into(), path);
         self.save()
     }
 
@@ -65,4 +67,8 @@ impl Config {
     }
 }
 
-pub struct Project {}
+/// represents a workspace
+#[derive(Serialize, Debug, Deserialize, Clone)]
+pub struct Workspace {
+    pub links: Vec<String>,
+}

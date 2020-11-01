@@ -2,7 +2,7 @@
 use std::path::PathBuf;
 
 // external
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg, ArgMatches, SubCommand};
 use open::that;
 
 // local
@@ -90,29 +90,7 @@ fn main() {
             .expect("Failed to save new config.");
     } else if let Some(_subcommand) = app.subcommand_matches("config") {
     } else if let Some(subcommand) = app.subcommand_matches("add") {
-        let workspace_to_edit = subcommand
-            .value_of("workspace")
-            .expect("Please provide a workspace name.");
-        let workspace_items = config
-            .workspaces
-            .get_mut(workspace_to_edit)
-            .expect("No workspace found by that name, aborting...");
-
-        let type_to_add = subcommand
-            .value_of("type")
-            .expect("No type found, aborting...");
-        let value = subcommand
-            .value_of("value")
-            .expect("No new value provided, aborting...");
-
-        if type_to_add == "link" {
-            workspace_items.links.push(value.into());
-        }
-
-        println!(
-            "Added item {} of type {} to workspace {} successfully.",
-            value, type_to_add, workspace_to_edit
-        );
+        add(subcommand, config);
     } else if let Some(_subcommand) = app.subcommand_matches("edit") {
     } else if let Some(subcommand) = app.subcommand_matches("launch") {
         let workspace = config
@@ -127,4 +105,30 @@ fn main() {
             that(i).expect("Failed to open link.");
         });
     }
+}
+
+fn add(subcommand: &ArgMatches, mut config: Config) {
+    let workspace_to_edit = subcommand
+        .value_of("workspace")
+        .expect("Please provide a workspace name.");
+    let workspace_items = config
+        .workspaces
+        .get_mut(workspace_to_edit)
+        .expect("No workspace found by that name, aborting...");
+
+    let type_to_add = subcommand
+        .value_of("type")
+        .expect("No type found, aborting...");
+    let value = subcommand
+        .value_of("value")
+        .expect("No new value provided, aborting...");
+
+    if type_to_add == "link" {
+        workspace_items.links.push(value.into());
+    }
+
+    println!(
+        "Added item {} of type {} to workspace {} successfully.",
+        value, type_to_add, workspace_to_edit
+    );
 }

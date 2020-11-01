@@ -30,7 +30,31 @@ fn main() {
                 ),
         )
         .subcommand(SubCommand::with_name("config").about("View and edit your config."))
-        .subcommand(SubCommand::with_name("add").about("Add an item to the current workspace"))
+        .subcommand(
+            SubCommand::with_name("add")
+                .about("Add an item to a workspace")
+                .arg(
+                    Arg::with_name("type")
+                        .short("t")
+                        .help("The type of item to add")
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("value")
+                        .short("v")
+                        .help("The value of the item being added")
+                        .possible_values(&["link"])
+                        .takes_value(true)
+                        .required(true),
+                )
+                .arg(
+                    Arg::with_name("workspace")
+                        .short("w")
+                        .required(true)
+                        .takes_value(true),
+                ),
+        )
         .subcommand(
             SubCommand::with_name("edit")
                 .about("Change or remove items in the current workspace")
@@ -65,7 +89,30 @@ fn main() {
             )
             .expect("Failed to save new config.");
     } else if let Some(_subcommand) = app.subcommand_matches("config") {
-    } else if let Some(_subcommand) = app.subcommand_matches("add") {
+    } else if let Some(subcommand) = app.subcommand_matches("add") {
+        let workspace_to_edit = subcommand
+            .value_of("workspace")
+            .expect("Please provide a workspace name.");
+        let workspace_items = config
+            .workspaces
+            .get_mut(workspace_to_edit)
+            .expect("No workspace found by that name, aborting...");
+
+        let type_to_add = subcommand
+            .value_of("type")
+            .expect("No type found, aborting...");
+        let value = subcommand
+            .value_of("value")
+            .expect("No new value provided, aborting...");
+
+        if type_to_add == "link" {
+            workspace_items.links.push(value.into());
+        }
+
+        println!(
+            "Added item {} of type {} to workspace {} successfully.",
+            value, type_to_add, workspace_to_edit
+        );
     } else if let Some(_subcommand) = app.subcommand_matches("edit") {
     } else if let Some(subcommand) = app.subcommand_matches("launch") {
         let workspace = config
